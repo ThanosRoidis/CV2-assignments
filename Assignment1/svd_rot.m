@@ -1,14 +1,10 @@
-p = source;
-q = target;
-
-%function [ R, t ] = svd_rot( p, q, w )
+function [ R, t ] = svd_rot( p, q, w )
 %SVD_ROT Summary of this function goes here
 %   Detailed explanation goes here
-    
     N = size(p,1);
     d = size(p,2);
     
-    if true%nargin == 2
+    if nargin == 2
         w = ones(N, 1);
     end
     
@@ -25,11 +21,12 @@ q = target;
 
     [U, ~, V] = svd(S);
     
-    diagonal = ones(d);
-    diagonal(d,d) = det(V * U');
+    eye_det = eye(d);
+    eye_det(d,d) = det(V * U');
     
-    R = V * diagonal * U';
+    R = V * eye_det * U';
+    R = R';
     
-    t = q_ - p_*R;
-%end
+    t = q_ - p_* R;
+end
 
