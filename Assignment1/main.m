@@ -1,30 +1,39 @@
+% 
+% source = load('source.mat');
+% source = source.source';
+% target = load('target.mat');
+% target = target.target';
+% 
+% [R,t] = iterative_closest_point(source, target, 'random', 0.5);
+% 
+% estimated = source * R + t;
+% 
+% source = source';
+% target = target';
+% estimated = estimated';
+% 
+% figure(1);
+% scatter3(target(1,:), target(2,:), target(3,:));
+% hold on
+% scatter3(source(1,:), source(2,:), source(3,:));
+% hold off
+% 
+% figure(2);
+% scatter3(target(1,:), target(2,:), target(3,:));
+% hold on
+% scatter3(estimated(1,:), estimated(2,:), estimated(3,:));
+% hold off
 
-source = load('source.mat');
-source = source.source';
-target = load('target.mat');
-target = target.target';
 
-[R,t] = iterative_closest_point(source, target, 'random', 0.5);
-
-estimated = source * R + t;
-
-source = source';
-target = target';
-estimated = estimated';
-
-figure(1);
-scatter3(target(1,:), target(2,:), target(3,:));
-hold on
-scatter3(source(1,:), source(2,:), source(3,:));
-hold off
-
-figure(2);
-scatter3(target(1,:), target(2,:), target(3,:));
-hold on
-scatter3(estimated(1,:), estimated(2,:), estimated(3,:));
-hold off
+%point_could_merged = merge_scenes(99, 5, 'method2');
+ind = randsample(size(point_could_merged,1), 100000);
 
 
+X = point_could_merged(ind,1);
+Y = point_could_merged(ind,2);
+Z = point_could_merged(ind,3);
+
+scatter3(Z,Y,X, '.');
 
 %{
 %R_targ = rand(3,3);
