@@ -4,7 +4,7 @@ source = source.source';
 target = load('target.mat');
 target = target.target';
 
-[R,t] = iterative_closest_point(source, target);
+[R,t] = iterative_closest_point(source, target, 'random', 0.5);
 
 estimated = source * R + t;
 
