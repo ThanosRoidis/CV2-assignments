@@ -5,10 +5,10 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         t_cum = zeros(1, 3);
     end
     
-    sampling_type = 'uniform'
+    sampling_type = 'uniform';
     sampling_percentage = 0.1;
 
-    for frame_id=0 : step : (frames - step)
+    for frame_id = 0:step:(frames - step)
         % base frame
         frame_str = sprintf('%010d', frame_id);
         pcd_base = strcat('data/', frame_str, '.pcd');
@@ -34,8 +34,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         [pcd_base, ~] = remove_background(pcd_base);
         [pcd_target, ~] = remove_background(pcd_target);
 
-        disp(size(pcd_base));
-        disp(size(pcd_target));
+        fprintf('Merging frame %d\n', frame_id + step);
         
         
         if frame_id == 0 && strcmp(method, 'method2')
@@ -45,15 +44,52 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         
         if (strcmp(method, 'method1'))
             [R, t]= iterative_closest_point(pcd_target, pcd_base, sampling_type, sampling_percentage);
-            R_cum = R * R_cum;
+            
             t_cum = t * R_cum + t_cum;
+            R_cum = R * R_cum;
+            
+            
             transf_pcd = pcd_target * R_cum + t_cum;
+            %transf_pcd = pcd_target * R + t;
+            
             pcd_merged = cat(1, pcd_merged, transf_pcd);
+            
+%             figure(1);
+%             
+%             subplot(1,2,1);
+%             scatter3(pcd_base(:,1), pcd_base(:,2), pcd_base(:,3),'.');
+%             hold on
+%             scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
+%             hold off
+%             
+%             subplot(1,2,2);
+%             scatter3(pcd_base(:,1), pcd_base(:,2), pcd_base(:,3),'.');
+%             hold on
+%             scatter3(transf_pcd(:,1), transf_pcd(:,2), transf_pcd(:,3),'.');
+%             hold off
 
         elseif(strcmp(method, 'method2'))
             [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_type, sampling_percentage);
             transf_pcd = pcd_target * R + t;
+            
+            
+            figure(1);
+            
+            subplot(1,2,1);
+            scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
+            hold on
+            scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
+            hold off
+
+            
+            subplot(1,2,2);
+            scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
+            hold on
+            scatter3(transf_pcd(:,1), transf_pcd(:,2), transf_pcd(:,3),'.');
+            hold off
+            
             pcd_merged = cat(1, pcd_merged, transf_pcd);
+            
         end
     end
 
