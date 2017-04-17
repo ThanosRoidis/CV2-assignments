@@ -1,10 +1,10 @@
-
+% 
 % source = load('source.mat');
 % source = source.source';
 % target = load('target.mat');
 % target = target.target';
 % 
-% [R,t] = iterative_closest_point(source, target, 'random', 0.5);
+% [R,t] = iterative_closest_point(source, target, 'uniform', 0.5);
 % 
 % estimated = source * R + t;
 % 
@@ -41,17 +41,17 @@
 
 
 
-% %test merging scenes
+%test merging scenes
 point_cloud_merged2 = merge_scenes(99, 1, 'method1');
-% ind = randsample(size(point_could_merged2,1), 1000000);
-% X = point_could_merged2(ind,1);
-% Y = point_could_merged2(ind,2);
-% Z = point_could_merged2(ind,3);
-% C = X;
-X = point_cloud_merged2(:,1);
-Y = point_cloud_merged2(:,2);
-Z = point_cloud_merged2(:,3);
-C = X;%ones(size(X,1),1);
+ind = randsample(size(point_cloud_merged2,1), 10000);
+X = point_cloud_merged2(ind,1);
+Y = point_cloud_merged2(ind,2);
+Z = point_cloud_merged2(ind,3);
+C = X;
+% X = point_cloud_merged2(:,1);
+% Y = point_cloud_merged2(:,2);
+% Z = point_cloud_merged2(:,3);
+% C = X;%ones(size(X,1),1);
 fscatter3(X,Y,Z,C);
 xlabel('X');
 ylabel('Y');

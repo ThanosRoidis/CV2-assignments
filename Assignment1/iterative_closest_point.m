@@ -1,6 +1,9 @@
 %% iterative closest point
 function [R,t, RMS] = iterative_closest_point(A1, A2, sampling_type, sampling_percentage)
     
+    tol = 1e-5;
+    max_iter = 100;
+
     if true
         verbose = true;
     end
@@ -16,10 +19,12 @@ function [R,t, RMS] = iterative_closest_point(A1, A2, sampling_type, sampling_pe
     A2 = select_points(A2, sampling_percentage, sampling_type);
 
     A1_transf = A1 * R + t;
+    
+    kd_mdl = KDTreeSearcher(A2);
 
     %% Find the closest points for each point in the base point set (A1) from the target point set (A2) using brute-force approach.
-    for i = 1 : 40
-
+    for i = 0 : max_iter
+        
         % for random sampling, a different sample of points is taken at each iteration
         if strcmp(sampling_type, 'random')
             A1 = select_points(A1_init, sampling_percentage, sampling_type);
@@ -28,11 +33,22 @@ function [R,t, RMS] = iterative_closest_point(A1, A2, sampling_type, sampling_pe
         end
         
         %Find psi(A) using pairwise distance
-        pairwise_dist = pdist2(A1_transf, A2);
-        [~, index] = min(pairwise_dist, [], 2);
+        %pairwise_dist = pdist2(A1_transf, A2);
+        %[d1, index] = min(pairwise_dist, [], 2);
+        
+        
+        %Find psi(A) using KD search tree distance
+        [index, d2] = knnsearch(kd_mdl, A1_transf, 'K', 1);
+        
+        %disp(norm(d1 - d2));
+        
         psi_A1 = A2(index, :);
         
         %Find rotation
+        
+%         max_dist = max(d2);
+%         d2 = 1 - d2/max_dist;
+        
         [R,t] = svd_rot(A1, psi_A1);
 
         %Update Points
@@ -40,7 +56,7 @@ function [R,t, RMS] = iterative_closest_point(A1, A2, sampling_type, sampling_pe
 
         %Calculate Root Mean Square
         dist = RootMeanSquare(A1_transf, psi_A1);
-        if i == 1
+        if i == 0
             RMS = dist;
         else
             RMS = cat(1,RMS, dist);
@@ -50,6 +66,20 @@ function [R,t, RMS] = iterative_closest_point(A1, A2, sampling_type, sampling_pe
         if verbose
             fprintf('Iteration %d RMS: %f\n', i, dist);
         end
+        
+        
+        if i > 2
+            if norm(RMS(end) - RMS(end - 1)) < tol
+                break;
+            end
+        end
+        
+    end
+    
+    if i == max_iter
+        fprintf('%d iterations run, no convergence for tol=%f!!\n', max_iter, tol);
+    else
+        fprintf('Convergence after %d iterations for tol=%f\n', i, tol);
     end
 end
 
