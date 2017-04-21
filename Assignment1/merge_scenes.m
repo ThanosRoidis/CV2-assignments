@@ -6,7 +6,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
     end
     
     sampling_type = 'uniform';
-    sampling_percentage = 0.1;
+    sampling_percentage = 0.05;
 
     for frame_id = 0:step:(frames - step)
         % base frame
@@ -15,8 +15,6 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         jpg_base = strcat('data/', frame_str, '.jpg');
         mask_base = strcat('data/', frame_str, '_mask.jpg');
         depth_base = strcat('data/', frame_str, '_depth.png');
-        
-        
         
         % target frame
         frame_str2 = sprintf('%010d', frame_id + step);
@@ -27,23 +25,19 @@ function [pcd_merged] = merge_scenes(frames, step, method)
 
 
         [pcd_base, ordered] = pcdFromDepth(depth_base);
-        [pcd_target, ordered] = pcdFromDepth(depth_target);
-        
-%         pcd_base = readPcd(pcd_base); 
-%         pcd_base = pcd_base(:,1:3);
-%         pcd_target = readPcd(pcd_target); 
-%         pcd_target = pcd_target(:,1:3);
-%         
+        [pcd_target, ordered] = pcdFromDepth(depth_target);        
+%         pcd_base = readPcd(pcd_base); pcd_base = pcd_base(:,1:3);
+%         pcd_target = readPcd(pcd_target); pcd_target = pcd_target(:,1:3);
+
         % remove background
         [pcd_base, ~] = remove_background(pcd_base);
         [pcd_target, ~] = remove_background(pcd_target);
 
         fprintf('Merging frame %d\n', frame_id + step);
         
-        
         if frame_id == 0 && strcmp(method, 'method2')
             pcd_merged = pcd_base;
-            disp('METHOD 2');
+            continue;
         end
         
         
@@ -59,48 +53,54 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             R_cum = R * R_cum;
             
             transf_pcd = pcd_target * R_cum + t_cum;
-            %transf_pcd = pcd_target * R + t;
             
             pcd_merged = cat(1, pcd_merged, transf_pcd);
             
-%             figure(1);
-%             
-%             subplot(1,2,1);
-%             scatter3(pcd_base(:,1), pcd_base(:,2), pcd_base(:,3),'.');
-%             hold on
-%             scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
-%             hold off
-%             
-%             subplot(1,2,2);
-%             scatter3(pcd_base(:,1), pcd_base(:,2), pcd_base(:,3),'.');
-%             hold on
-%             scatter3(transf_pcd(:,1), transf_pcd(:,2), transf_pcd(:,3),'.');
-%             hold off
+            figure(1);
+            title(sprintf('Merging frame %d',  frame_id + step));
+            subplot(1,2,1);
+            scatter3(pcd_base(:,1), pcd_base(:,2), pcd_base(:,3),'.');
+            hold on
+            scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
+            hold off
+            
+            subplot(1,2,2);
+            scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
+            hold on
+            scatter3(transf_pcd(:,1), transf_pcd(:,2), transf_pcd(:,3),'.');
+            hold off
+            drawnow;
 
         elseif(strcmp(method, 'method2'))
-             [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_type, sampling_percentage);
-             transf_pcd = pcd_target * R + t;
             
-            %[R, t] = iterative_closest_point(pcd_merged, pcd_target, sampling_type, sampling_percentage);
-            %transf_pcd = (pcd_target - t) / R;
+            [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_type, sampling_percentage);
             
-%             figure(1);
-%             subplot(1,2,1);
-%             scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
-%             hold on
-%             scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
-%             hold off
-%             subplot(1,2,2);
-%             scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
-%             hold on
-%             scatter3(transf_pcd(:,1), transf_pcd(:,2), transf_pcd(:,3),'.');
-%             hold off
+            %print before
+            figure(1);
+            title(sprintf('Merging frame %d',  frame_id + step));
+            subplot(1,2,1);
+            scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
+            hold on
+            scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
+            hold off
             
-            pcd_merged = cat(1, pcd_merged, transf_pcd);
+            %transform the merged pointclouds
+            pcd_merged = (pcd_merged - t) / R;
+             
+            subplot(1,2,2); 
+            scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
+            hold on
+            scatter3(pcd_target(:,1), pcd_target(:,2), pcd_target(:,3),'.');
+            hold off
+            drawnow;
+            
+            %add the new frame to the merged
+            pcd_merged = cat(1, pcd_merged, pcd_target);
             
         end
     end
 
+    disp('Merging Finished!!!');
  end
 
 

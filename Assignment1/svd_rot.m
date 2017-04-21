@@ -9,6 +9,7 @@ function [ R, t ] = svd_rot( p, q, w )
     end
     
     p_ = mean(w.*p, 1);
+    
     p_ = p_ * N / sum(w);
     
     q_ = mean(w.*q, 1);
