@@ -5,45 +5,47 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         t_cum = zeros(1, 3);
     end
     
-    sampling_type = 'uniform';
+    sampling_method = 'uniform';
     sampling_percentage = 0.01;
 
+    %Loop over all of the images, starting from 0
     for frame_id = 0:step:(frames - step)
         % base frame
         frame_str = sprintf('%010d', frame_id);
         pcd_base = strcat('data/', frame_str, '.pcd');
-        jpg_base = strcat('data/', frame_str, '.jpg');
-        mask_base = strcat('data/', frame_str, '_mask.jpg');
-        depth_base = strcat('data/', frame_str, '_depth.png');
+        %jpg_base = strcat('data/', frame_str, '.jpg'); mask_base = strcat('data/', frame_str, '_mask.jpg'); depth_base = strcat('data/', frame_str, '_depth.png');
+        normals_base = strcat('data/', frame_str, '_normal.pcd');
         
         % target frame
         frame_str2 = sprintf('%010d', frame_id + step);
         pcd_target = strcat('data/', frame_str2, '.pcd');
-        jpg_target = strcat('data/', frame_str2, '.jpg');
-        mask_target = strcat('data/', frame_str2, '_mask.jpg');
-        depth_target = strcat('data/', frame_str2, '_depth.png');
+        %jpg_target = strcat('data/', frame_str2, '.jpg'); mask_target = strcat('data/', frame_str2, '_mask.jpg'); depth_target = strcat('data/', frame_str2, '_depth.png');
+        normals_target = strcat('data/', frame_str, '_normal.pcd');
 
 
-%         [pcd_base, ordered] = pcdFromDepth(depth_base);
-%         [pcd_target, ordered] = pcdFromDepth(depth_target);        
+%       [pcd_base, ordered] = pcdFromDepth(depth_base);
+%       [pcd_target, ordered] = pcdFromDepth(depth_target);        
         pcd_base = readPcd(pcd_base); pcd_base = pcd_base(:,1:3);
         pcd_target = readPcd(pcd_target); pcd_target = pcd_target(:,1:3);
 
         % remove background
-        [pcd_base, normals1] = remove_background(pcd_base);
-        [pcd_target, normals2] = remove_background(pcd_target);
-
-        fprintf('Merging frame %d\n', frame_id + step);
+        [pcd_base, ids1] = remove_background(pcd_base);
+        [pcd_target, id2] = remove_background(pcd_target);
         
-        if frame_id == 0 && strcmp(method, 'method2')
-            pcd_merged = pcd_base;
-            continue;
+        %read normals
+        if strcmp(sampling_method, 'normal')
+            normals_base = readPcd(normals_base);
+            normals_base = normals_base(ids1, :);
+            normals_target = readPcd(normals_target);
+            normals_target = normals_target(id2, :);
         end
+        
+        fprintf('Merging frame %d\n', frame_id + step);
         
         
         if (strcmp(method, 'method1'))
-            [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_type...
-                , sampling_percentage, frame_id+step, frame_id, normals2, normals1);
+            [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_method...
+                , sampling_percentage, normals_target, normals_source);
             
             if RMS(end) > 0.5
                 fprintf('High RMS (%f), skipping frame!\n', RMS(end));
@@ -73,10 +75,13 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             drawnow;
 
         elseif(strcmp(method, 'method2'))
+            if frame_id == 0 
+                pcd_merged = pcd_base;
+            end
             
-            [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_type, sampling_percentage);
+            [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_method, sampling_percentage, normals_target, normals_merged);
             
-            %print before
+            %plot before
             figure(1);
             title(sprintf('Merging frame %d',  frame_id + step));
             subplot(1,2,1);
@@ -88,6 +93,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             %transform the merged pointclouds
             pcd_merged = (pcd_merged - t) / R;
              
+            %plot after
             subplot(1,2,2); 
             scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
             hold on
