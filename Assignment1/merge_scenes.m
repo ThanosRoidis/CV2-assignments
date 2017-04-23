@@ -6,7 +6,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
     end
     
     sampling_type = 'uniform';
-    sampling_percentage = 0.05;
+    sampling_percentage = 0.01;
 
     for frame_id = 0:step:(frames - step)
         % base frame
@@ -24,14 +24,14 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         depth_target = strcat('data/', frame_str2, '_depth.png');
 
 
-        [pcd_base, ordered] = pcdFromDepth(depth_base);
-        [pcd_target, ordered] = pcdFromDepth(depth_target);        
-%         pcd_base = readPcd(pcd_base); pcd_base = pcd_base(:,1:3);
-%         pcd_target = readPcd(pcd_target); pcd_target = pcd_target(:,1:3);
+%         [pcd_base, ordered] = pcdFromDepth(depth_base);
+%         [pcd_target, ordered] = pcdFromDepth(depth_target);        
+        pcd_base = readPcd(pcd_base); pcd_base = pcd_base(:,1:3);
+        pcd_target = readPcd(pcd_target); pcd_target = pcd_target(:,1:3);
 
         % remove background
-        [pcd_base, ~] = remove_background(pcd_base);
-        [pcd_target, ~] = remove_background(pcd_target);
+        [pcd_base, normals1] = remove_background(pcd_base);
+        [pcd_target, normals2] = remove_background(pcd_target);
 
         fprintf('Merging frame %d\n', frame_id + step);
         
@@ -42,7 +42,8 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         
         
         if (strcmp(method, 'method1'))
-            [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_type, sampling_percentage);
+            [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_type...
+                , sampling_percentage, frame_id+step, frame_id, normals2, normals1);
             
             if RMS(end) > 0.5
                 fprintf('High RMS (%f), skipping frame!\n', RMS(end));
