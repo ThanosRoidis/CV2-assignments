@@ -1,34 +1,42 @@
-function [pcd_merged] = merge_scenes(frames, step, method)
+function [pcd_merged] = merge_scenes(last_frame, step, method)
+% merge the scenes until the 'last_frame' frame, starting from frame 0, with a step of 'step'.
+%
+    %The normals of the current frame, the previous frame and all of the
+    %frames
     normals_base = [];
     normals_target = [];
+    normals_merged = [];
+    
+    %The pointcloud of all the previous frames
     pcd_merged = zeros(0,3);
+    %The total R and t used in the first method only
     if (strcat(method, 'method1'))
         R_cum = eye(3);
         t_cum = zeros(1, 3);
     end
     
     sampling_method = 'uniform';
+    sampling_percentage = 0.01;
+    
     weighting_method = 'normals';
     rejection_method = 'worst_percent';
-    sampling_percentage = 0.1;
 
     %Loop over all of the images, starting from 0
-    for frame_id = 0:step:(frames - step)
-        % base frame
+    for frame_id = 0:step:(last_frame - step)
+        
+        % base frame filenames
         frame_str = sprintf('%010d', frame_id);
         pcd_base = strcat('data/', frame_str, '.pcd');
         %jpg_base = strcat('data/', frame_str, '.jpg'); mask_base = strcat('data/', frame_str, '_mask.jpg'); depth_base = strcat('data/', frame_str, '_depth.png');
         normals_base = strcat('data/', frame_str, '_normal.pcd');
         
-        % target frame
+        % target frame filenames
         frame_str2 = sprintf('%010d', frame_id + step);
         pcd_target = strcat('data/', frame_str2, '.pcd');
         %jpg_target = strcat('data/', frame_str2, '.jpg'); mask_target = strcat('data/', frame_str2, '_mask.jpg'); depth_target = strcat('data/', frame_str2, '_depth.png');
         normals_target = strcat('data/', frame_str2, '_normal.pcd');
 
-
-%       [pcd_base, ordered] = pcdFromDepth(depth_base);
-%       [pcd_target, ordered] = pcdFromDepth(depth_target);        
+       %read pointclouds
         pcd_base = readPcd(pcd_base); pcd_base = pcd_base(:,1:3);
         pcd_target = readPcd(pcd_target); pcd_target = pcd_target(:,1:3);
 
@@ -36,7 +44,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         [pcd_base, ids1] = remove_background(pcd_base);
         [pcd_target, id2] = remove_background(pcd_target);
         
-        %read normals
+        %read normals if needed
         if strcmp(sampling_method, 'normal') ||  strcmp(weighting_method, 'normals')
             normals_base = readPcd(normals_base);
             normals_base = normals_base(ids1, 1:3);
@@ -46,23 +54,27 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         
         fprintf('Merging frame %d\n', frame_id + step);
         
-        
+        %The first method
         if (strcmp(method, 'method1'))
             [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_method...
                 , sampling_percentage, normals_target, normals_base);
             
+            %skip frames with a high RMS
             if RMS(end) > 0.5
                 fprintf('High RMS (%f), skipping frame!\n', RMS(end));
                 continue;
             end
-            
+            %Accumulate R and t
             t_cum = t * R_cum + t_cum;
             R_cum = R * R_cum;
             
+            %Transform the pointcloud of the current frame
             transf_pcd = pcd_target * R_cum + t_cum;
             
+            %append it to the total point cloud
             pcd_merged = cat(1, pcd_merged, transf_pcd);
             
+            %Plot the pointclouds before and after
             figure(1);
             title(sprintf('Merging frame %d',  frame_id + step));
             subplot(1,2,1);
@@ -79,8 +91,10 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             drawnow;
 
         elseif(strcmp(method, 'method2'))
+            %On the first frame, initialize it as the total point clouds
             if frame_id == 0 
                 pcd_merged = pcd_base;
+                normals_merged = normals_base;
             end
             
             [R, t] = iterative_closest_point(pcd_target, pcd_merged, sampling_method, sampling_percentage, normals_target, normals_merged);
@@ -96,7 +110,10 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             
             %transform the merged pointclouds
             pcd_merged = (pcd_merged - t) / R;
-             
+            if ~isempty(normals_merged)
+                normals_merged = normals_merged / R;
+            end
+            
             %plot after
             subplot(1,2,2); 
             scatter3(pcd_merged(:,1), pcd_merged(:,2), pcd_merged(:,3),'.');
@@ -107,6 +124,9 @@ function [pcd_merged] = merge_scenes(frames, step, method)
             
             %add the new frame to the merged
             pcd_merged = cat(1, pcd_merged, pcd_target);
+            if ~isempty(normals_merged)
+                normals_merged = cat(1, normals_merged, normals_target);
+            end
             
         end
     end
@@ -130,6 +150,7 @@ function  [cloud, ordered] = pcdFromDepth(file_path)
 end
 
 function [pointCloud_filtered, indexes] = remove_background(point_cloud)
+%remove all of the points that are in the background (2 meters away)
     threshold = 2;
 
     indexes = find(point_cloud(:,3) < threshold);

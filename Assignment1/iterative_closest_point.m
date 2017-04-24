@@ -1,11 +1,16 @@
 %% iterative closest point
 function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampling_percentage, normals1, normals2)
-    firs=0;
-    tol = 1e-6;
+    %Run the ICP algorithm
+    %A1 is the source point cloud
+    %A2 is the target point cloud
+    %normals1 are the normals of the baase point cloud
+    %normals2 are the normals of the target point cloud
+     
+    tol = 1e-6;   
     max_iter = 100;
     verbose = true;
-    rejection_method = 'deviate';
-    weighting_method = 'normals';
+    rejection_method = 'worst_percent';
+    weighting_method = 'constant';
     
     %% Initialize R = I, t = 0
     R = eye(3);
@@ -70,6 +75,7 @@ function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampli
         
         %Find rotation
         [R,t] = svd_rot(A1_acc, psi_A1_acc, w);
+        
         %Update Points
         A1_transf = A1 * R + t;
         
@@ -86,9 +92,8 @@ function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampli
         
         %check for convergence
         if i > 2
-            if norm(RMS(end) - RMS(end - 1)) < tol && firs == 0
-                toc;
-                firs=1;
+            if norm(RMS(end) - RMS(end - 1)) < tol 
+                toc; 
                 fprintf('First Convergence after %d iterations for tol=%f\n', i, tol);
                 break;
             end
@@ -105,6 +110,8 @@ function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampli
 end
 
 function [indices, distances] = match_pairs(A1, A2, kd_mdl)
+%       Match the points in A1 with the closest points in A2 using a k-d
+%       tree
 %       kd_model is a KD-tree trained on the A2 points
 
         method = 'kd-tree';
@@ -122,6 +129,11 @@ end
 
 
 function [w] = weights(method, arg1, arg2)
+%   Define the weights based on the weighting method
+%   For constant weights, arg1 is the number of pairs
+%   For max weights, arg1 are the distances between each pair
+%   For normals weights, arg1 and arg2 are the normals of the base points
+%   and the matching target points respectively
     if strcmp(method, 'constant') 
         N = arg1;
         w = ones(N, 1);
@@ -141,7 +153,8 @@ function [w] = weights(method, arg1, arg2)
 end
 
 function accepted_pairs = reject_pairs(method, p_distances)
-     
+    %Return the indexes of the accepted pairs using one of the 2 available
+    %methods
     if strcmp(method, 'worst_percent') 
         [s_p_dists, s_p_distsI] = sort(p_distances);
         accepted_pairs = s_p_distsI(1:round(0.9*length(s_p_dists)));
@@ -157,16 +170,16 @@ end
 
 
 %% Root Mean Square
-function dist = RootMeanSquare(A1_transf, psi_A1)
-%     dist = sum(sum(((A1_transf-psi_A1).^2), 2));
+function dist = RootMeanSquare(A1_transf, psi_A1) 
     dist = sum(norm(A1_transf-psi_A1) ^ 2);    
-    dist = sqrt(dist/size(A1_transf, 1));
-    
-    %
+    dist = sqrt(dist/size(A1_transf, 1)); 
 end
 
 %% Sampling
 function [sampled_points] = select_points(points, percentage, method, normals)
+%   Sample points using one of the 3 sampling methods (uniform, random,
+%   normals)
+
     % initial number of points
     num_of_points = size(points, 1);
 
@@ -185,7 +198,7 @@ function [sampled_points] = select_points(points, percentage, method, normals)
         sampled_points = points(indexes, :);
     
     elseif (strcmp(method, 'normal'))
-        [indexes, nan_indexes] = normal_space_sampling(percentage, normals);
+        [indexes, nan_indexes] = normal_space_sampling(percentage, normals, 4);
         points(nan_indexes,:) = [];
         sampled_points = points(indexes, :);
     else
@@ -197,7 +210,8 @@ end
 
 
 function [indexes, nan_ind] = normal_space_sampling(percentage, normals, num_of_buckets)
-    num_of_buckets = 4; %number of buckets per dimension (actual total number of buckets is squared)
+   %Sample uniformly on the normal-space, keeping a certain percentage of
+   %the normals and num_of_buckets
 
     % remove NaN normals
     nan_ind = find(isnan(normals(:,1)));
