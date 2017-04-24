@@ -1,4 +1,6 @@
 function [pcd_merged] = merge_scenes(frames, step, method)
+normals_base = [];
+normals_target = [];
     pcd_merged = zeros(0,3);
     if (strcat(method, 'method1'))
         R_cum = eye(3);
@@ -6,7 +8,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
     end
     
     sampling_method = 'uniform';
-    sampling_percentage = 0.01;
+    sampling_percentage = 0.1;
 
     %Loop over all of the images, starting from 0
     for frame_id = 0:step:(frames - step)
@@ -20,7 +22,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         frame_str2 = sprintf('%010d', frame_id + step);
         pcd_target = strcat('data/', frame_str2, '.pcd');
         %jpg_target = strcat('data/', frame_str2, '.jpg'); mask_target = strcat('data/', frame_str2, '_mask.jpg'); depth_target = strcat('data/', frame_str2, '_depth.png');
-        normals_target = strcat('data/', frame_str, '_normal.pcd');
+        normals_target = strcat('data/', frame_str2, '_normal.pcd');
 
 
 %       [pcd_base, ordered] = pcdFromDepth(depth_base);
@@ -45,7 +47,7 @@ function [pcd_merged] = merge_scenes(frames, step, method)
         
         if (strcmp(method, 'method1'))
             [R, t, RMS]= iterative_closest_point(pcd_target, pcd_base, sampling_method...
-                , sampling_percentage, normals_target, normals_source);
+                , sampling_percentage, normals_target, normals_base);
             
             if RMS(end) > 0.5
                 fprintf('High RMS (%f), skipping frame!\n', RMS(end));

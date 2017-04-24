@@ -39,22 +39,29 @@ function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampli
         psi_A1 = A2(matches, :);
         
         %reject pairs;
-%       accepted_pairs = reject_pairs(distances)
-%       A1 = A1(accepted_pairs,:);
-%       psi_A1 = psi_A1(accepted_pairs,:);
-%       distances = distances(accepted_pairs);
+      accepted_pairs = reject_pairs(reject_pairs_method, distances);
+      A1_acc = A1(accepted_pairs,:);
+      psi_A1_acc = psi_A1(accepted_pairs,:);
+      distances = distances(accepted_pairs);
         
         %define weights
-%       max_dist = max(distances);
-%       distances = 1 - distances/max_dist;
+        if (strcmp(weighting_method, 'max'))
+            w = weights(weighting_method, distances);
+        elseif (strcmp(weighting_method, 'normals'))
+            w = weights(weighting_method, normals1, normals2);
+        elseif (strcmp(weighting_method, 'constant'))
+            w = weights(weighting_method, size(distances, 1));
+        end
+        
+
         
         %Find rotation
-        [R,t] = svd_rot(A1, psi_A1);
+        [R,t] = svd_rot(A1_acc, psi_A1_acc, w);
         %Update Points
-        A1_transf = A1 * R + t;
+        A1_transf = A1_acc * R + t;
 
         %Calculate Root Mean Square
-        dist = RootMeanSquare(A1_transf, psi_A1);
+        dist = RootMeanSquare(A1_transf, psi_A1_acc);
         if i == 0
             RMS = dist;
         else
@@ -103,14 +110,14 @@ end
 function [w] = weights(method, arg1, arg2)
     if strcmp(method, 'constant') 
         N = arg1;
-        w = ones(N, 1)
+        w = ones(N, 1);
     elseif strcmp(method, 'max') 
         distances = arg1;
         max_dist = max(distances);
         w = 1 - distances/max_dist;
     elseif strcmp(method, 'normals')
-        n1 = args1;
-        n2 = args2;
+        n1 = arg1;
+        n2 = arg2;
         w = dot(n1,n2, 2);
     else
         error(method, ' is not a weighting method');
@@ -118,8 +125,8 @@ function [w] = weights(method, arg1, arg2)
 
 end
 
-function accepted_pairs = reject_pairs(p_distances)
-    method = 'worst_percent';
+function accepted_pairs = reject_pairs(method, p_distances)
+    
     %method = 'threshold';
     %method = 'deviate';
     if strcmp(method, 'worst_percent') 
@@ -178,7 +185,7 @@ function [sampled_points] = select_points(points, percentage, method, normals)
 end
 
 
-function [indexes, nan_ind] = normal_space_sampling(percentage, normals, num_of_buckets1)
+function [indexes, nan_ind] = normal_space_sampling(percentage, normals, num_of_buckets)
     num_of_buckets = 4; %number of buckets per dimension (actual total number of buckets is squared)
 
     % remove NaN normals
