@@ -4,7 +4,7 @@ function [R,t, RMS,A1] = iterative_closest_point(A1, A2, sampling_method, sampli
     tol = 1e-6;
     max_iter = 100;
     verbose = true;
-    rejection_method = 'deviate';
+    rejection_method = 'worst_percent';
     weighting_method = 'normals';
     
     %% Initialize R = I, t = 0
@@ -133,7 +133,7 @@ function [w] = weights(method, arg1, arg2)
         n1 = arg1;
         n2 = arg2;
         w = dot(n1,n2, 2);
-        w(isnan(w)) = 0;
+        
     else
         error(method, ' is not a weighting method');
     end

@@ -26,7 +26,7 @@
 
 
 %test merging scenes
-point_cloud_merged = merge_scenes(99, 1, 'method1');
+% point_cloud_merged = merge_scenes(99, 1, 'method1');
 ind = randsample(size(point_cloud_merged,1), 40000);
 X = point_cloud_merged(ind,1);
 Y = point_cloud_merged(ind,2);

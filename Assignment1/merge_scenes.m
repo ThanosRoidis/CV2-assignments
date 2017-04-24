@@ -1,6 +1,6 @@
 function [pcd_merged] = merge_scenes(frames, step, method)
-normals_base = [];
-normals_target = [];
+    normals_base = [];
+    normals_target = [];
     pcd_merged = zeros(0,3);
     if (strcat(method, 'method1'))
         R_cum = eye(3);
@@ -8,6 +8,8 @@ normals_target = [];
     end
     
     sampling_method = 'uniform';
+    weighting_method = 'normals';
+    rejection_method = 'worst_percent';
     sampling_percentage = 0.1;
 
     %Loop over all of the images, starting from 0
@@ -35,11 +37,11 @@ normals_target = [];
         [pcd_target, id2] = remove_background(pcd_target);
         
         %read normals
-        if strcmp(sampling_method, 'normal')
+        if strcmp(sampling_method, 'normal') ||  strcmp(weighting_method, 'normals')
             normals_base = readPcd(normals_base);
-            normals_base = normals_base(ids1, :);
+            normals_base = normals_base(ids1, 1:3);
             normals_target = readPcd(normals_target);
-            normals_target = normals_target(id2, :);
+            normals_target = normals_target(id2, 1:3);
         end
         
         fprintf('Merging frame %d\n', frame_id + step);
