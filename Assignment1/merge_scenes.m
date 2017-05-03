@@ -15,11 +15,11 @@ function [pcd_merged] = merge_scenes(last_frame, step, method)
         t_cum = zeros(1, 3);
     end
     
-    sampling_method = 'uniform';
+    sampling_method = 'uniform'; %'random', 'normal'
     sampling_percentage = 0.01;
     
-    weighting_method = 'normals';
-    rejection_method = 'worst_percent';
+    %weighting_method = 'normals';
+    %rejection_method = 'worst_percent';
 
     %Loop over all of the images, starting from 0
     for frame_id = 0:step:(last_frame - step)
