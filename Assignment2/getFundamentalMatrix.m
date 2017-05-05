@@ -6,11 +6,11 @@ function [ F ] = getFundamentalMatrix( matches )
     
     %Normalize
     T = T_norm(matches(:,1), matches(:,2));
-    p = [matches(:,1:2); ones(n,1)];
+    p = [matches(:,1:2), ones(n,1)];
     p = p*T';
     
     T_ = T_norm(matches(:,3), matches(:,4));
-    q = [matches(:,3:4); ones(n,1)]
+    q = [matches(:,3:4), ones(n,1)];
     q = q * T_';
     
     matches(:,1:2) = p(:,1:2);
@@ -41,7 +41,7 @@ function [ F ] = getFundamentalMatrix( matches )
     F = Uf * Df * Vf';
 
     %De
-    F = T_' * F' * T; 
+    F = T_' * F * T; 
     
 end
 

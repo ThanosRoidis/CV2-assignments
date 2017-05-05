@@ -1,8 +1,8 @@
 function [ d ] = sampson_dist( match, F )
 %SAMPSON_DIST Summary of this function goes here
 %   Detailed explanation goes here
-    p = [match(0), match(1), 1];
-    q = [match(2), match(3), 1];
+    p = [match(1); match(2); 1];
+    q = [match(3); match(4); 1];
     
     fp = F*p;
     fq = F'*q;
