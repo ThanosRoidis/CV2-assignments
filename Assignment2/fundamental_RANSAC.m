@@ -1,42 +1,43 @@
-function [ bestF ,best_inlier_points] = fundamental_RANSAC( matches, n, max_iter )
+function [ bestF, most_inliers] = fundamental_RANSAC(matches, n, threshold, max_iter, verbose )
 %FUNDAMENTAL_RANSAC Summary of this function goes here
 %   Detailed explanation goes here
+    
+    if nargin < 5
+        verbose = false;
+    end
 
-%     n = 8;
-    bestF = eye(3);
-    most_inliers = 0;
-    threshhold = 1.0e-04;%5;
-    best_inlier_points = [];
+    bestF = eye(3); 
+    most_inliers = [];
     
     for i = 1:max_iter
-%         n = 8;
         r = randsample(size(matches,1),n);
         sampled = matches(r,:);
         
         F = getFundamentalMatrix(sampled);
         
-        inliers = 0;
-        inlier_points = [];
+        inliers = [];
 
         for j=1:size(matches,1)
             d = sampson_dist(matches(j,:), F);
             
-            if d < threshhold
-                inliers = inliers + 1;
-                inlier_points = [inlier_points; matches(j,:)];
-
+            if d < threshold 
+                inliers(end + 1,:) = j;
             end
         end
         
-        if inliers > most_inliers
+        if size(inliers,1) > size(most_inliers,1)
             bestF = F;
-            best_inlier_points = inlier_points;
+            most_inliers = inliers;
         end
         
-            
+        if verbose
+            fprintf('Inliers at iteration %d: %d\n', i,  size(inliers,1));
+        end
     end
 
-
-
+    most_inliers = matches(most_inliers, :);
+    if verbose
+        fprintf('Maximum inliers: %d\n', size(most_inliers,1));
+    end
 end
 

@@ -4,10 +4,13 @@ function [ F ] = getFundamentalMatrix( matches )
     
     n = size(matches,1);
     
-    %Normalize
+    %%  Normalize
     T = T_norm(matches(:,1), matches(:,2));
     p = [matches(:,1:2), ones(n,1)];
     p = p*T';
+%     disp(mean(p))
+%     disp(sum ( p - mean(p)));
+%     disp('---');
     
     T_ = T_norm(matches(:,3), matches(:,4));
     q = [matches(:,3:4), ones(n,1)];
@@ -16,9 +19,7 @@ function [ F ] = getFundamentalMatrix( matches )
     matches(:,1:2) = p(:,1:2);
     matches(:,3:4) = q(:,1:2);
     
-    
-    
-    %Construct A
+    %% Construct A
     A = zeros(n, 9);
     A(:,1) = matches(:,1) .* matches(:,3);
     A(:,2) = matches(:,1) .* matches(:,4);
@@ -30,17 +31,17 @@ function [ F ] = getFundamentalMatrix( matches )
     A(:,8) = matches(:,4);
     A(:,9) = ones(n, 1);
 
-    %Get F through SVD
-    [U, D, V] = svd(A);
+    %% Get F through SVD
+    [U, D, V] = svd(A); 
     F = V(:,end);
     F = reshape(F, [3,3]);
-
-    %Enforce Singularity on F
+    
+    %% Enforce Singularity on F
     [Uf, Df, Vf] = svd(F);
     Df(end) = 0;
     F = Uf * Df * Vf';
 
-    %De
+    %% Denormalize
     F = T_' * F * T; 
     
 end
