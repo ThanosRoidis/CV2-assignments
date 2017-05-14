@@ -53,7 +53,7 @@ disp('Calculating measurement matrix...');
 fprintf(' Size: %d x %d (%d points in %d views)\n', [size(measurement_matrix), size(one_hot_matrix')]);
 % 
 disp('Calculating dense blocks of the measurement matrix...');
-[dense_blocks, block_points, ~] = get_dense_blocks( measurement_matrix, one_hot_matrix );
+[dense_blocks, block_points, block_views] = get_dense_blocks( measurement_matrix, one_hot_matrix );
 fprintf(' %d dense blocks\n', length(dense_blocks));
 
 pcds = {};

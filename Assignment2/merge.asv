@@ -32,16 +32,15 @@ for i= 2 : length(pcds)
     pcd_target = pcds{i};
     
     % find which overlapping points does the tagret contain
-    [shared_points, target_pos, merged_pos] = intersect(block_points{i}, existing_pointsIDs);
+    [shared_points, target_ids, merged_ids] = intersect(block_points{i}, existing_pointsIDs);
     
     %
-    pcd_target_existing = pcd_target(:, target_pos);
-    pcd_merged_overlap = pcd_merged(:, merged_pos);
+    pcd_target_existing = pcd_target(:, target_ids);
+    pcd_merged_overlap = pcd_merged(:, merged_ids);
     
-    new = setdiff(1:size(pcd_target,2),target_pos)';
-    pcd_target_new = pcd_target(:,new);
-    %disp(new);
-    %disp(target_pos);
+    all = 1:size(pcd_target,2);
+    pcd_target_new = pcd_target(:,setdiff(all,target_ids));
+    
     
     %skip frames with a few overlapping points
 %     if size(ids, 1) < 4
@@ -49,16 +48,16 @@ for i= 2 : length(pcds)
 %         continue;
 %     end
     % ICP only on the shared points
-    [R, T, ~] = icp(pcd_target_existing, pcd_merged_overlap, 5);
+    [R, T, ~] = icp(pcd_target_existing, pcd_merged_overlap, 20);
      
     % transform the merged pointclouds
-    pcd_merged = R * pcd_merged + repmat(T,1,length(pcd_merged));
+    pcd_merged = inv(R) * (pcd_merged - T);
     
     
     % add the new frame to the merged
     pcd_merged = cat(2, pcd_merged, pcd_target_new);
     
-    new_pointIDs = block_points{i}(new);
+    new_pointIDs = block_points{i}(setdiff(all,target_ids));
     existing_pointsIDs = [existing_pointsIDs, new_pointIDs];
     %existing_points = unique(existing_points);
     disp(i);
