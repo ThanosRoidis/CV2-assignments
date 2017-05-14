@@ -1,5 +1,6 @@
 function [ d ] = sampson_dist( match, F )
-%SAMPSON_DIST Summary of this function goes here
+%SAMPSON_DIST Returns the Sampson Distance between two points, [match(1:2)]
+%and [match(3:4)], with the fundamental matrix F.
 %   Detailed explanation goes here
     p = [match(1); match(2); 1];
     q = [match(3); match(4); 1];

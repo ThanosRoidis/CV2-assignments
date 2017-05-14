@@ -1,4 +1,9 @@
 function [] = plot_epipolar(left_image, right_image, inliers, F, max_plot_points)
+%PLOT_EPIPOLAR Plots the two images (left and right) and the epipolars of
+%the points of the left image on the right image, and the epipolars on the
+%left image.
+
+
     [m n] = size(left_image);
 
     %draw the two images

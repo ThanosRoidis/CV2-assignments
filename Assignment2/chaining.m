@@ -1,4 +1,7 @@
 function [measurement_matrix, one_hot_matrix] = chaining(matches_pairs)
+%CHAINING Given a cell array of matches, in which each element contains the
+%raw matches between a pair of views (as given by vl_ubcmatch), it
+%calculates the sparse measurement matrix by keeping only the inliers from the normalized 8-point algorithm.
 
     measurement_matrix = [];
 
@@ -69,7 +72,7 @@ function [measurement_matrix, one_hot_matrix] = chaining(matches_pairs)
 
     end
 
-    %create measurement matrix and visualize 
+    %create one-hot matrix (1 = point exists, 0 otherwise)
     one_hot_matrix = measurement_matrix(1:2:end,:);  % odd matrix
     one_hot_matrix = spones(one_hot_matrix);
 end

@@ -1,5 +1,6 @@
-function [ F ] = getFundamentalMatrix( matches )
-%GETFUNDAMENTALMATRIX Summary of this function goes here
+function [ F ] = normalized_8point( matches )
+%GETFUNDAMENTALMATRIX Returns the fundamental matrix F out of the given
+%matches by using the normalized 8-point algorithm
 %   Detailed explanation goes here
     
     n = size(matches,1);
@@ -8,9 +9,6 @@ function [ F ] = getFundamentalMatrix( matches )
     T = T_norm(matches(:,1), matches(:,2));
     p = [matches(:,1:2), ones(n,1)];
     p = p*T';
-%     disp(mean(p))
-%     disp(sum ( p - mean(p)));
-%     disp('---');
     
     T_ = T_norm(matches(:,3), matches(:,4));
     q = [matches(:,3:4), ones(n,1)];

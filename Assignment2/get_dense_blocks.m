@@ -1,4 +1,10 @@
-function [ dense_blocks ] = get_dense_blocks( measurement_matrix, one_hot_matrix ) 
+function [ dense_blocks, block_points, block_views] = get_dense_blocks( measurement_matrix, one_hot_matrix ) 
+%GET_DENSE_BLOCKS It receives the sparse measurement matrix (and the optionary
+%one_hot_matrix), and returns a cell array in which each element is a dense
+%block. A dense block is created for each point 'i' in the measurement
+%matrix (column) that is in at least 3 other views, with all the other points that are at least in all of the
+%views that 'i' is in. It also returns the IDs of the points and the
+%views of each dense block
 
     [m,n] = size(measurement_matrix);
     
@@ -8,6 +14,8 @@ function [ dense_blocks ] = get_dense_blocks( measurement_matrix, one_hot_matrix
     end
 
     dense_blocks = {};
+    block_points = {};
+    block_views = {};
     
     %Create a dense block for each point 'i' in the measurement matrix (column)
     %with all the other points that are at least in all of the views that
@@ -41,8 +49,10 @@ function [ dense_blocks ] = get_dense_blocks( measurement_matrix, one_hot_matrix
 
                 dense_block = measurement_matrix(common_views_xy, points);
                 dense_blocks{end + 1} = dense_block;
+                block_points{end + 1} = points;
+                block_views{end + 1} = common_views;
             end
         end
-
     end
+   
 end

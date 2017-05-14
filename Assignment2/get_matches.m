@@ -10,8 +10,8 @@ function [ matches ] = get_matches( im1, im2 )
 
     Ia = single(im1);
     Ib = single(im2);
-    [fa, da] = vl_sift(Ia) ;
-    [fb, db] = vl_sift(Ib) ;
+    [fa, da] = vl_sift(Ia);
+    [fb, db] = vl_sift(Ib);
 
     [matches_indexes, scores] = vl_ubcmatch(da, db) ;
 
@@ -21,8 +21,6 @@ function [ matches ] = get_matches( im1, im2 )
         matches(i,1:2) = fa(1:2,matches_indexes(1,i));
         matches(i,3:4) = fb(1:2,matches_indexes(2,i));
     end
-    
-    
     
     
 end

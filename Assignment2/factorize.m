@@ -1,6 +1,7 @@
 function [ M, S  ] = factorize( pvm, eliminate_affine_ambiguity )
-%UNTITLED It receives a dense block of the pointview matrix and factorizes
-%it
+%FACTORIZE It receives a dense measurment matrix and factorizes
+%it by returning the camera matrix M and the points matrix S. The second
+%arguement indicates whether the affine ambiguity should be eliminated.
     
     pvm = pvm - mean(pvm,2);
 
@@ -9,7 +10,7 @@ function [ M, S  ] = factorize( pvm, eliminate_affine_ambiguity )
     Xs = D(1:2:end,:);
     Ys = D(2:2:end,:);
 %     disp(size(D));
-%     D = [Xs; Ys];
+    D = [Xs; Ys];
 %     disp(size(D));
     
     [U,W,V] = svd(D);
@@ -110,8 +111,25 @@ function [ M, S  ] = factorize( pvm, eliminate_affine_ambiguity )
         L = [l(1) l(2) l(3);...
              l(2) l(4) l(5);...
              l(3) l(5) l(6)] ;
-        Q = chol(L); % finally!
+        
+        [Q,p] = chol(L); % finally!
+        
+%       if L is not positive definite, find the closest positive definite
+%       matrix
+        if p > 0  
+            %set the negative eigenvalues of L to zero and recompute L.
+            [L_V,L_D] = eig(L);  
 
+            diagonal = diag(L_D);  
+            diagonal(diagonal <= 0.001) = 0.001; 
+            L_D = diag(diagonal);
+
+            L = L_V * L_D / L_V;
+
+            Q = chol(L);  
+        end
+        
+        
         disp(Q)
         M = M * Q;
         S  = Q' \ S ;
