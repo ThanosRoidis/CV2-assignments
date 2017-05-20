@@ -50,7 +50,7 @@ function [] = plot_epipolar(left_image, right_image, inliers, F, max_plot_points
         left_epipolar_y = left_y + (left_epipolar_x-left_x)*(left_epipole(2)-left_y)/(left_epipole(1)-left_x);
 
         %plot on the left image
-        figure(1); hold on; plot(left_epipolar_x, left_epipolar_y, 'r');
+       % figure(1); hold on; plot(left_epipolar_x, left_epipolar_y, 'r');
 
     end
 

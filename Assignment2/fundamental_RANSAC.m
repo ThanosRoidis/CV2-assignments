@@ -4,7 +4,7 @@ function [ bestF, most_inliers] = fundamental_RANSAC(matches, n, threshold, max_
     %The number of points 'n' used for the normalized 8-point algorithm,
     %the threshold for an inlier, and the number of iterations of RANSAC
     %must be specified. For the distance between an inlier pair, Sampson
-    %Distane is used.
+    %Distance is used.
 
     
     if nargin < 5

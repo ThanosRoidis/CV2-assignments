@@ -12,7 +12,7 @@ function [ dense_blocks, block_points, block_views] = get_dense_blocks( measurem
         one_hot_matrix = measurement_matrix(1:2:end,:);  
         one_hot_matrix = spones(one_hot_matrix);
     end
-
+    
     dense_blocks = {};
     block_points = {};
     block_views = {};
@@ -21,16 +21,14 @@ function [ dense_blocks, block_points, block_views] = get_dense_blocks( measurem
     %with all the other points that are at least in all of the views that
     %'i' is in.
     for i=1:n
-
+    
         %the views of point/column 'i'
         common_views = one_hot_matrix(:,i);
         
         %if there is already another block with the same views, then skip
         same_views = false;
         for k = 1:length(block_views)
-            if isequal(block_views{k}, find(common_views))
-%             disp(block_views(k))
-%             disp(common_views);
+            if isequal(block_views{k}, find(common_views)) 
                 same_views = true;
                 break;
             end
@@ -42,8 +40,8 @@ function [ dense_blocks, block_points, block_views] = get_dense_blocks( measurem
         %'i' must be in at least 4 views
         if length(nonzeros(common_views)) > 3
 
+            %find all the points that are at least in the same views as 'i'
             points = [i];
-
             for j = 1:n
                 if j ~= i 
                     other_views = one_hot_matrix(:,j);

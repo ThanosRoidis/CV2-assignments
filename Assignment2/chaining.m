@@ -8,7 +8,7 @@ function [measurement_matrix, one_hot_matrix] = chaining(matches_pairs)
     for i=1 : size(matches_pairs, 2)
 
         % get inliers for frame i, i+1
-        [~, inliers] = fundamental_RANSAC(matches_pairs{i}, 8, 1, 20, false);
+        [~, inliers] = fundamental_RANSAC(matches_pairs{i}, 8, 1, 40, false);
         inliers = round(inliers);
 
     %     indices = [];
@@ -75,4 +75,5 @@ function [measurement_matrix, one_hot_matrix] = chaining(matches_pairs)
     %create one-hot matrix (1 = point exists, 0 otherwise)
     one_hot_matrix = measurement_matrix(1:2:end,:);  % odd matrix
     one_hot_matrix = spones(one_hot_matrix);
+    one_hot_matrix = full(one_hot_matrix);
 end
